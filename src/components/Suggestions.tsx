@@ -21,22 +21,28 @@ export const Suggestions = () => {
       const response = await axios.get('/api/transactions');
       const transactions: any[] = response.data;
 
+      // Vamos calcular a renda LÍQUIDA (renda - descontos) e as despesas (sem descontos)
       const income = transactions?.filter(t => t.type === "income")
         .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-
-      const expenses = transactions?.filter(t => t.type === "expense")
+        
+      const discounts = transactions?.filter(t => t.type === "expense" && t.category === "discounts")
         .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+        
+      const netIncome = income - discounts;
+
+      const validExpenses = transactions?.filter(t => t.type === "expense" && t.category !== "discounts") || [];
+      const expenses = validExpenses.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
       const categoryData = {
-        fixed: transactions?.filter(t => t.category === "fixed_expenses")
+        fixed: validExpenses.filter(t => t.category === "fixed_expenses")
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
-        variable: transactions?.filter(t => t.category === "variable_expenses")
+        variable: validExpenses.filter(t => t.category === "variable_expenses")
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
-        savings: transactions?.filter(t => t.category === "savings")
+        savings: validExpenses.filter(t => t.category === "savings")
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
-        tithe: transactions?.filter(t => t.category === "tithe")
+        tithe: validExpenses.filter(t => t.category === "tithe")
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
-        fiv: transactions?.filter(t => t.category === "fiv")
+        fiv: validExpenses.filter(t => t.category === "fiv")
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
       };
 
@@ -65,15 +71,15 @@ export const Suggestions = () => {
           });
         }
 
-        if (savingsPercent < 10 && income > 0) {
+        if (savingsPercent < 10 && netIncome > 0) {
           suggestions.push({
             type: "info",
-            message: "Tente manter pelo menos 10% da renda para a reserva de emergência/investimentos regulares.",
+            message: "Tente manter pelo menos 10% da sua renda líquida para a reserva de emergência.",
             icon: <Lightbulb className="h-5 w-5" />,
           });
         }
 
-        if (fivPercent < 10 && income > 0) {
+        if (fivPercent < 10 && netIncome > 0) {
           suggestions.push({
             type: "warning",
             message: "Você está destinando menos de 10% para o Projeto FIV. Tente aportar mais para bater a meta!",

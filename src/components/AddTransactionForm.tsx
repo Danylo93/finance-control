@@ -110,6 +110,7 @@ export const AddTransactionForm = () => {
                   <SelectItem value="savings">Economia/Investimentos (10%)</SelectItem>
                   <SelectItem value="tithe">Dízimo (10%)</SelectItem>
                   <SelectItem value="fiv">Projeto FIV (10%)</SelectItem>
+                  <SelectItem value="discounts">Descontos (IRPF/INSS)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

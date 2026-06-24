@@ -23,7 +23,7 @@ model Transaction {
   amount      Decimal  @db.Decimal(12, 2)
   description String
   type        String   // 'income' | 'expense'
-  category    String?  // 'fixed_expenses' | 'variable_expenses' | 'savings' | 'tithe' | 'fiv'
+  category    String?  // 'fixed_expenses' | 'variable_expenses' | 'savings' | 'tithe' | 'fiv' | 'discounts'
   date        DateTime @default(now())
   isAutomatic Boolean  @default(false)
   createdAt   DateTime @default(now())

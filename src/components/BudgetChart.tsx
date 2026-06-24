@@ -25,16 +25,18 @@ export const BudgetChart = () => {
 
       const totalExpenses = transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 1;
 
+      const validExpenses = transactions?.filter(t => t.type === "expense" && t.category !== "discounts") || [];
+
       const categoryData = {
-        fixed: transactions?.filter(t => t.category === "fixed_expenses")
+        fixed: validExpenses.filter(t => t.category === "fixed_expenses")
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
-        variable: transactions?.filter(t => t.category === "variable_expenses")
+        variable: validExpenses.filter(t => t.category === "variable_expenses")
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
-        savings: transactions?.filter(t => t.category === "savings")
+        savings: validExpenses.filter(t => t.category === "savings")
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
-        tithe: transactions?.filter(t => t.category === "tithe")
+        tithe: validExpenses.filter(t => t.category === "tithe")
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
-        fiv: transactions?.filter(t => t.category === "fiv")
+        fiv: validExpenses.filter(t => t.category === "fiv")
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
       };
 

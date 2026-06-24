@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentUser } from 'aws-amplify/auth';
 import axios from 'axios';
-import { Target, TrendingUp, Plus, DollarSign } from "lucide-react";
+import { Target, TrendingUp, Plus, DollarSign, Pencil, Trash2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -25,6 +25,7 @@ export const Goals = () => {
   const queryClient = useQueryClient();
   const [isAddGoalOpen, setIsAddGoalOpen] = useState(false);
   const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
+  const [isEditGoalOpen, setIsEditGoalOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   
   // States for new goal
@@ -34,6 +35,10 @@ export const Goals = () => {
 
   // States for adding funds
   const [fundsAmount, setFundsAmount] = useState("");
+
+  const [editName, setEditName] = useState("");
+  const [editTargetAmount, setEditTargetAmount] = useState("");
+  const [editDeadline, setEditDeadline] = useState("");
 
   const { data: goals, isLoading } = useQuery<Goal[]>({
     queryKey: ["goals"],
@@ -112,6 +117,44 @@ export const Goals = () => {
     onError: () => toast.error("Erro ao adicionar valor"),
   });
 
+  const updateGoal = useMutation({
+    mutationFn: async () => {
+      if (!selectedGoal) return;
+      await axios.put('/api/goals', {
+        id: selectedGoal.id,
+        name: editName,
+        targetAmount: parseFloat(editTargetAmount),
+        deadline: editDeadline ? new Date(editDeadline).toISOString() : null,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
+      toast.success("Meta atualizada com sucesso!");
+      setIsEditGoalOpen(false);
+      setSelectedGoal(null);
+    },
+    onError: () => toast.error("Erro ao atualizar meta"),
+  });
+
+  const deleteGoal = useMutation({
+    mutationFn: async (id: string) => {
+      await axios.delete(`/api/goals?id=${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
+      toast.success("Meta excluída com sucesso!");
+    },
+    onError: () => toast.error("Erro ao excluir meta"),
+  });
+
+  const openEditModal = (goal: Goal) => {
+    setSelectedGoal(goal);
+    setEditName(goal.name);
+    setEditTargetAmount(goal.targetAmount.toString());
+    setEditDeadline(goal.deadline ? new Date(goal.deadline).toISOString().split('T')[0] : "");
+    setIsEditGoalOpen(true);
+  };
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -171,9 +214,19 @@ export const Goals = () => {
             return (
               <div key={goal.id} className="space-y-3 p-4 border rounded-lg bg-secondary/10">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 group">
                     <TrendingUp className="h-4 w-4 text-primary" />
                     <span className="font-semibold text-lg">{goal.name}</span>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 ml-2">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditModal(goal)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => {
+                        if (confirm('Tem certeza que deseja excluir esta meta?')) deleteGoal.mutate(goal.id);
+                      }}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="text-right">
                     <span className="text-lg font-bold text-primary">
@@ -229,6 +282,31 @@ export const Goals = () => {
           })
         )}
       </CardContent>
+
+      <Dialog open={isEditGoalOpen} onOpenChange={setIsEditGoalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Meta</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Nome da Meta</Label>
+              <Input value={editName} onChange={e => setEditName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Valor Alvo (R$)</Label>
+              <Input type="number" value={editTargetAmount} onChange={e => setEditTargetAmount(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Data Limite (Opcional)</Label>
+              <Input type="date" value={editDeadline} onChange={e => setEditDeadline(e.target.value)} />
+            </div>
+            <Button className="w-full" onClick={() => updateGoal.mutate()} disabled={updateGoal.isPending || !editName || !editTargetAmount}>
+              {updateGoal.isPending ? "Salvando..." : "Salvar Alterações"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

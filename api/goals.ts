@@ -31,12 +31,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === 'PUT') {
-      const { id, currentAmount } = req.body;
+      const { id, currentAmount, name, targetAmount, deadline } = req.body;
       if (!id) return res.status(400).json({ error: 'ID is required' });
       
+      const updateData: any = {};
+      if (currentAmount !== undefined) updateData.currentAmount = currentAmount;
+      if (name !== undefined) updateData.name = name;
+      if (targetAmount !== undefined) updateData.targetAmount = targetAmount;
+      if (deadline !== undefined) updateData.deadline = deadline;
+
       const goal = await prisma.goal.update({
         where: { id },
-        data: { currentAmount },
+        data: updateData,
       });
       return res.status(200).json(goal);
     }

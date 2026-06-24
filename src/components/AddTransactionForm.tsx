@@ -105,10 +105,11 @@ export const AddTransactionForm = () => {
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="fixed_expenses">Gastos Fixos (60%)</SelectItem>
+                  <SelectItem value="fixed_expenses">Gastos Fixos (50%)</SelectItem>
                   <SelectItem value="variable_expenses">Gastos Variáveis (20%)</SelectItem>
                   <SelectItem value="savings">Economia/Investimentos (10%)</SelectItem>
                   <SelectItem value="tithe">Dízimo (10%)</SelectItem>
+                  <SelectItem value="fiv">Projeto FIV (10%)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -34,6 +34,8 @@ export const BudgetChart = () => {
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
         tithe: transactions?.filter(t => t.category === "tithe")
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
+        fiv: transactions?.filter(t => t.category === "fiv")
+          .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
       };
 
       return [
@@ -41,7 +43,7 @@ export const BudgetChart = () => {
           name: "Gastos Fixos",
           value: categoryData.fixed,
           color: "hsl(var(--chart-1))",
-          recommended: 60,
+          recommended: 50,
         },
         {
           name: "Gastos Variáveis",
@@ -59,6 +61,12 @@ export const BudgetChart = () => {
           name: "Dízimo",
           value: categoryData.tithe,
           color: "hsl(var(--chart-4))",
+          recommended: 10,
+        },
+        {
+          name: "Projeto FIV",
+          value: categoryData.fiv,
+          color: "hsl(var(--chart-5))",
           recommended: 10,
         },
       ];
@@ -99,7 +107,7 @@ export const BudgetChart = () => {
           </PieChart>
         </ResponsiveContainer>
         <div className="mt-6 space-y-2">
-          <p className="text-sm font-medium text-center mb-4">Padrão Recomendado: 60/20/10/10</p>
+          <p className="text-sm font-medium text-center mb-4">Padrão Recomendado: 50/20/10/10/10</p>
           {chartData?.map((item) => (
             <div key={item.name} className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-2">

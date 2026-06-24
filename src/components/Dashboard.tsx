@@ -13,6 +13,7 @@ interface BudgetData {
     variable: number;
     savings: number;
     tithe: number;
+    fiv: number;
   };
 }
 
@@ -46,6 +47,9 @@ export const Dashboard = () => {
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
         tithe: transactions
           ?.filter(t => t.type === "expense" && t.category === "tithe")
+          .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
+        fiv: transactions
+          ?.filter(t => t.type === "expense" && t.category === "fiv")
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
       };
 

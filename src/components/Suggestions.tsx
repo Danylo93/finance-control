@@ -36,20 +36,23 @@ export const Suggestions = () => {
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
         tithe: transactions?.filter(t => t.category === "tithe")
           .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
+        fiv: transactions?.filter(t => t.category === "fiv")
+          .reduce((sum, t) => sum + Number(t.amount), 0) || 0,
       };
 
       const suggestions: Suggestion[] = [];
 
-      // Análise do padrão 60/20/10/10
+      // Análise do padrão 50/20/10/10/10
       if (expenses > 0) {
         const fixedPercent = (categoryData.fixed / expenses) * 100;
         const variablePercent = (categoryData.variable / expenses) * 100;
         const savingsPercent = (categoryData.savings / expenses) * 100;
+        const fivPercent = (categoryData.fiv / expenses) * 100;
 
-        if (fixedPercent > 65) {
+        if (fixedPercent > 55) {
           suggestions.push({
             type: "warning",
-            message: "Seus gastos fixos estão acima de 60%. Considere revisar contratos e assinaturas.",
+            message: "Seus gastos fixos estão acima de 50%. Considere revisar contratos e assinaturas.",
             icon: <AlertTriangle className="h-5 w-5" />,
           });
         }
@@ -65,8 +68,16 @@ export const Suggestions = () => {
         if (savingsPercent < 10 && income > 0) {
           suggestions.push({
             type: "info",
-            message: "Tente aumentar sua reserva de emergência para pelo menos 10% da renda.",
+            message: "Tente manter pelo menos 10% da renda para a reserva de emergência/investimentos regulares.",
             icon: <Lightbulb className="h-5 w-5" />,
+          });
+        }
+
+        if (fivPercent < 10 && income > 0) {
+          suggestions.push({
+            type: "warning",
+            message: "Você está destinando menos de 10% para o Projeto FIV. Tente aportar mais para bater a meta!",
+            icon: <AlertTriangle className="h-5 w-5" />,
           });
         }
       }

@@ -23,6 +23,7 @@ const categoryLabels: Record<string, string> = {
   variable_expenses: "Gastos Variáveis",
   savings: "Economia/Investimentos",
   tithe: "Dízimo",
+  fiv: "Projeto FIV",
 };
 
 export const TransactionList = () => {

@@ -9,6 +9,7 @@ interface CategoryData {
   value: number;
   color: string;
   recommended: number;
+  percentageText: string;
 }
 
 export const BudgetChart = () => {
@@ -21,11 +22,21 @@ export const BudgetChart = () => {
       const response = await axios.get('/api/transactions');
       const allTransactions: any[] = response.data;
       
-      const transactions = allTransactions.filter(t => t.type === 'expense' && t.account === 'checking');
+      const transactions = allTransactions.filter(t => t.account === 'checking');
+      
+      const grossIncome = transactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
-      const totalExpenses = transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 1;
+      const discounts = transactions
+        .filter(t => t.type === 'expense' && t.category === 'discounts')
+        .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
-      const validExpenses = transactions?.filter(t => t.category !== "discounts") || [];
+      const netIncome = grossIncome - discounts;
+      const safeNetIncome = netIncome > 0 ? netIncome : 1;
+      const safeGrossIncome = grossIncome > 0 ? grossIncome : 1;
+
+      const validExpenses = transactions.filter(t => t.type === 'expense' && t.category !== "discounts");
 
       const categoryData = {
         fixed: validExpenses.filter(t => t.category === "fixed_expenses")
@@ -46,30 +57,35 @@ export const BudgetChart = () => {
           value: categoryData.fixed,
           color: "hsl(var(--chart-1))",
           recommended: 50,
+          percentageText: `${((categoryData.fixed / safeNetIncome) * 100).toFixed(1)}% do Líquido`
         },
         {
           name: "Gastos Variáveis",
           value: categoryData.variable,
           color: "hsl(var(--chart-2))",
           recommended: 20,
+          percentageText: `${((categoryData.variable / safeNetIncome) * 100).toFixed(1)}% do Líquido`
         },
         {
           name: "Economia/Investimentos",
           value: categoryData.savings,
           color: "hsl(var(--chart-3))",
           recommended: 10,
+          percentageText: `${((categoryData.savings / safeNetIncome) * 100).toFixed(1)}% do Líquido`
         },
         {
           name: "Dízimo",
           value: categoryData.tithe,
           color: "hsl(var(--chart-4))",
           recommended: 10,
+          percentageText: `${((categoryData.tithe / safeGrossIncome) * 100).toFixed(1)}% do Bruto`
         },
         {
           name: "Projeto FIV",
           value: categoryData.fiv,
           color: "hsl(var(--chart-5))",
           recommended: 10,
+          percentageText: `${((categoryData.fiv / safeNetIncome) * 100).toFixed(1)}% do Líquido`
         },
       ];
     },
@@ -95,7 +111,7 @@ export const BudgetChart = () => {
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+              label={({ name, payload }) => `${name}: ${payload.percentageText.split(' ')[0]}`}
               outerRadius={100}
               fill="#8884d8"
               dataKey="value"
@@ -116,9 +132,12 @@ export const BudgetChart = () => {
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
                 {item.name}
               </span>
-              <span className="text-muted-foreground">
-                Recomendado: {item.recommended}%
-              </span>
+              <div className="text-right flex flex-col">
+                <span className="font-semibold text-primary">{item.percentageText}</span>
+                <span className="text-xs text-muted-foreground mt-0.5">
+                  Recomendado: {item.recommended}%
+                </span>
+              </div>
             </div>
           ))}
         </div>

@@ -10,6 +10,7 @@ interface CategoryLimit {
   spent: number;
   limit: number;
   color: string;
+  type: 'ceiling' | 'floor';
 }
 
 export const BudgetLimits = () => {
@@ -46,36 +47,41 @@ export const BudgetLimits = () => {
         fiv: validExpenses.filter(t => t.category === "fiv").reduce((sum, t) => sum + Number(t.amount), 0),
       };
 
-      const limits = [
+      const limits: CategoryLimit[] = [
         {
           name: "Gastos Fixos (50%)",
           spent: spent.fixed,
           limit: safeNetIncome * 0.50,
-          color: "hsl(var(--chart-1))"
+          color: "hsl(var(--chart-1))",
+          type: 'ceiling'
         },
         {
           name: "Gastos Variáveis (20%)",
           spent: spent.variable,
           limit: safeNetIncome * 0.20,
-          color: "hsl(var(--chart-2))"
+          color: "hsl(var(--chart-2))",
+          type: 'ceiling'
         },
         {
           name: "Dízimo (10% do Bruto)",
           spent: spent.tithe,
           limit: safeGrossIncome * 0.10,
-          color: "hsl(var(--chart-4))"
+          color: "hsl(var(--chart-4))",
+          type: 'floor'
         },
         {
           name: "Economia/Investimentos (10%)",
           spent: spent.savings,
           limit: safeNetIncome * 0.10,
-          color: "hsl(var(--chart-3))"
+          color: "hsl(var(--chart-3))",
+          type: 'floor'
         },
         {
           name: "Projeto FIV (10%)",
           spent: spent.fiv,
           limit: safeNetIncome * 0.10,
-          color: "hsl(var(--chart-5))"
+          color: "hsl(var(--chart-5))",
+          type: 'floor'
         }
       ];
 
@@ -112,45 +118,90 @@ export const BudgetLimits = () => {
       <CardContent className="space-y-6">
         {limitsData?.limits.map((item) => {
           const percentUsed = Math.min((item.spent / item.limit) * 100, 100) || 0;
-          const isOverLimit = item.spent > item.limit;
-          const available = Math.max(item.limit - item.spent, 0);
+          
+          if (item.type === 'ceiling') {
+            const isOverLimit = item.spent > item.limit;
+            const available = Math.max(item.limit - item.spent, 0);
 
-          return (
-            <div key={item.name} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-sm flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                  {item.name}
-                </span>
-                <span className={`text-sm font-bold ${isOverLimit ? 'text-destructive' : ''}`}>
-                  {formatCurrency(item.spent)} / {formatCurrency(item.limit)}
-                </span>
-              </div>
-              
-              <Progress 
-                value={percentUsed} 
-                className={`h-2 ${isOverLimit ? 'bg-destructive/20' : 'bg-secondary'}`}
-                indicatorColor={isOverLimit ? 'hsl(var(--destructive))' : item.color}
-              />
-              
-              <div className="flex items-center justify-between text-xs">
-                {isOverLimit ? (
-                  <span className="flex items-center gap-1 text-destructive font-medium">
-                    <AlertCircle className="h-3 w-3" />
-                    Estourou {formatCurrency(item.spent - item.limit)}
+            return (
+              <div key={item.name} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                    {item.name}
                   </span>
-                ) : (
-                  <span className="flex items-center gap-1 text-muted-foreground">
-                    <CheckCircle2 className="h-3 w-3 text-success/70" />
-                    Restam {formatCurrency(available)}
+                  <span className={`text-sm font-bold ${isOverLimit ? 'text-destructive' : ''}`}>
+                    {formatCurrency(item.spent)} / {formatCurrency(item.limit)}
                   </span>
-                )}
-                <span className="text-muted-foreground">
-                  {((item.spent / item.limit) * 100).toFixed(1)}% usado
-                </span>
+                </div>
+                
+                <Progress 
+                  value={percentUsed} 
+                  className={`h-2 ${isOverLimit ? 'bg-destructive/20' : 'bg-secondary'}`}
+                  indicatorColor={isOverLimit ? 'hsl(var(--destructive))' : item.color}
+                />
+                
+                <div className="flex items-center justify-between text-xs">
+                  {isOverLimit ? (
+                    <span className="flex items-center gap-1 text-destructive font-medium">
+                      <AlertCircle className="h-3 w-3" />
+                      Estourou {formatCurrency(item.spent - item.limit)}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <CheckCircle2 className="h-3 w-3 text-success/70" />
+                      Restam {formatCurrency(available)}
+                    </span>
+                  )}
+                  <span className="text-muted-foreground">
+                    {((item.spent / item.limit) * 100).toFixed(1)}% usado
+                  </span>
+                </div>
               </div>
-            </div>
-          );
+            );
+          } else {
+            // Floor logic (Savings, FIV, Tithe)
+            const hasReached = item.spent >= item.limit;
+            const remaining = Math.max(item.limit - item.spent, 0);
+            const exceedAmount = Math.max(item.spent - item.limit, 0);
+
+            return (
+              <div key={item.name} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                    {item.name}
+                  </span>
+                  <span className={`text-sm font-bold ${hasReached ? 'text-success' : ''}`}>
+                    {formatCurrency(item.spent)} / {formatCurrency(item.limit)}
+                  </span>
+                </div>
+                
+                <Progress 
+                  value={percentUsed} 
+                  className={`h-2 ${hasReached ? 'bg-success/20' : 'bg-secondary'}`}
+                  indicatorColor={hasReached ? 'hsl(var(--success))' : item.color}
+                />
+                
+                <div className="flex items-center justify-between text-xs">
+                  {hasReached ? (
+                    <span className="flex items-center gap-1 text-success font-medium">
+                      <CheckCircle2 className="h-3 w-3" />
+                      {exceedAmount > 0 ? `Superou a meta em ${formatCurrency(exceedAmount)}!` : `Meta atingida!`}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <AlertCircle className="h-3 w-3 text-muted-foreground/70" />
+                      Faltam {formatCurrency(remaining)}
+                    </span>
+                  )}
+                  <span className="text-muted-foreground">
+                    {((item.spent / item.limit) * 100).toFixed(1)}% alcançado
+                  </span>
+                </div>
+              </div>
+            );
+          }
         })}
       </CardContent>
     </Card>

@@ -8,7 +8,8 @@ interface BudgetData {
   checkingBalance: number;
   benefitsBalance: number;
   checkingExpenses: number;
-  savingsAndFiv: number;
+  savingsOnly: number;
+  fivOnly: number;
 }
 
 export const Dashboard = () => {
@@ -37,16 +38,22 @@ export const Dashboard = () => {
         ?.filter(t => t.type === "expense" && t.account === "benefits")
         .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
-      // Savings + FIV (Checking Only)
-      const savingsAndFiv = transactions
-        ?.filter(t => t.type === "expense" && t.account === "checking" && (t.category === "savings" || t.category === "fiv"))
+      // Savings (Checking Only)
+      const savingsOnly = transactions
+        ?.filter(t => t.type === "expense" && t.account === "checking" && t.category === "savings")
+        .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+
+      // FIV (Checking Only)
+      const fivOnly = transactions
+        ?.filter(t => t.type === "expense" && t.account === "checking" && t.category === "fiv")
         .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
       return {
         checkingBalance: checkingIncome - checkingExpenses,
         benefitsBalance: benefitsIncome - benefitsExpenses,
         checkingExpenses,
-        savingsAndFiv
+        savingsOnly,
+        fivOnly
       };
     },
   });
@@ -59,7 +66,7 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
       <Card className="hover:shadow-lg transition-shadow bg-primary/5">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Saldo Conta Corrente</CardTitle>
@@ -101,14 +108,27 @@ export const Dashboard = () => {
 
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Economizado (FIV + Reserva)</CardTitle>
+          <CardTitle className="text-sm font-medium">Economizado (Reserva)</CardTitle>
           <PiggyBank className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-primary">
-            {formatCurrency(budgetData?.savingsAndFiv || 0)}
+            {formatCurrency(budgetData?.savingsOnly || 0)}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">Total aportado no mês</p>
+          <p className="text-xs text-muted-foreground mt-1">Investido no mês</p>
+        </CardContent>
+      </Card>
+
+      <Card className="hover:shadow-lg transition-shadow bg-rose-500/5 dark:bg-rose-500/10">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Projeto FIV</CardTitle>
+          <PiggyBank className="h-4 w-4 text-rose-500" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-rose-500">
+            {formatCurrency(budgetData?.fivOnly || 0)}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Aportado no mês</p>
         </CardContent>
       </Card>
     </div>

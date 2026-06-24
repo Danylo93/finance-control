@@ -10,6 +10,7 @@ import { AddTransactionForm } from "@/components/AddTransactionForm";
 import { BudgetChart } from "@/components/BudgetChart";
 import { Suggestions } from "@/components/Suggestions";
 import { BankConnection } from "@/components/BankConnection";
+import { Goals } from "@/components/Goals";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -71,6 +72,7 @@ const Index = () => {
           
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
+              <Goals />
               <BudgetChart />
               <Suggestions />
               <TransactionList />

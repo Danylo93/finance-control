@@ -8,6 +8,7 @@ import { Dashboard } from "@/components/Dashboard";
 import { TransactionList } from "@/components/TransactionList";
 import { AddTransactionForm } from "@/components/AddTransactionForm";
 import { BudgetChart } from "@/components/BudgetChart";
+import { BudgetLimits } from "@/components/BudgetLimits";
 import { Suggestions } from "@/components/Suggestions";
 import { BankConnection } from "@/components/BankConnection";
 import { Goals } from "@/components/Goals";
@@ -73,7 +74,10 @@ const Index = () => {
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
               <Goals />
-              <BudgetChart />
+              <div className="grid gap-6 md:grid-cols-2">
+                <BudgetChart />
+                <BudgetLimits />
+              </div>
               <Suggestions />
               <TransactionList />
             </div>

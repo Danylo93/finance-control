@@ -73,15 +73,37 @@ export const Goals = () => {
   const addFunds = useMutation({
     mutationFn: async () => {
       if (!selectedGoal) return;
-      const newAmount = Number(selectedGoal.currentAmount) + parseFloat(fundsAmount);
       
+      const user = await getCurrentUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const amountAdded = parseFloat(fundsAmount);
+      const newAmount = Number(selectedGoal.currentAmount) + amountAdded;
+      
+      // Atualiza a meta
       await axios.put('/api/goals', {
         id: selectedGoal.id,
         currentAmount: newAmount,
       });
+
+      // Cria a transação de despesa para descontar da Conta Corrente
+      let category = 'savings'; // padrão para metas
+      if (selectedGoal.name.toLowerCase().includes('fiv')) category = 'fiv';
+
+      await axios.post('/api/transactions', {
+        userId: user.userId,
+        description: `Depósito: ${selectedGoal.name}`,
+        amount: amountAdded,
+        type: 'expense',
+        category,
+        account: 'checking',
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["budget-overview"] });
+      queryClient.invalidateQueries({ queryKey: ["budget-chart"] });
       toast.success("Valor adicionado com sucesso!");
       setIsAddFundsOpen(false);
       setFundsAmount("");

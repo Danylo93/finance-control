@@ -16,6 +16,7 @@ export const AddTransactionForm = () => {
   const [amount, setAmount] = useState("");
   const [type, setType] = useState<"income" | "expense">("expense");
   const [category, setCategory] = useState("");
+  const [account, setAccount] = useState<"checking" | "benefits">("checking");
 
   const addTransaction = useMutation({
     mutationFn: async () => {
@@ -28,6 +29,7 @@ export const AddTransactionForm = () => {
         amount: parseFloat(amount),
         type,
         category: type === "expense" ? category : null,
+        account,
       });
     },
     onSuccess: () => {
@@ -71,6 +73,19 @@ export const AddTransactionForm = () => {
               <SelectContent>
                 <SelectItem value="income">Receita</SelectItem>
                 <SelectItem value="expense">Despesa</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="account">Conta / Origem</Label>
+            <Select value={account} onValueChange={(value: "checking" | "benefits") => setAccount(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="checking">Conta Corrente / Salário</SelectItem>
+                <SelectItem value="benefits">Benefícios (VA/VR)</SelectItem>
               </SelectContent>
             </Select>
           </div>

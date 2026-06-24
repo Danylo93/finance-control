@@ -27,6 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         data: {
           ...data,
           userId: data.userId || 'DUMMY_USER_ID', // Deve vir do Token Cognito
+          account: data.account || 'checking',
         },
       });
       return res.status(201).json(transaction);
@@ -40,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === 'PUT') {
-      const { id, description, amount, category, type } = req.body;
+      const { id, description, amount, category, type, account } = req.body;
       if (!id) return res.status(400).json({ error: 'ID is required' });
       
       const transaction = await prisma.transaction.update({
@@ -49,7 +50,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           description,
           amount: amount ? parseFloat(amount) : undefined,
           category,
-          type
+          type,
+          account
         },
       });
       return res.status(200).json(transaction);

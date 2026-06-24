@@ -21,6 +21,7 @@ interface Transaction {
   type: "income" | "expense";
   category: string;
   date: string;
+  account: "checking" | "benefits";
 }
 
 const categoryLabels: Record<string, string> = {
@@ -40,6 +41,7 @@ export const TransactionList = () => {
   const [editAmount, setEditAmount] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editType, setEditType] = useState<"income" | "expense">("expense");
+  const [editAccount, setEditAccount] = useState<"checking" | "benefits">("checking");
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
     queryKey: ["transactions"],
@@ -74,7 +76,8 @@ export const TransactionList = () => {
         description: editDescription,
         amount: parseFloat(editAmount),
         category: editCategory,
-        type: editType
+        type: editType,
+        account: editAccount
       });
     },
     onSuccess: () => {
@@ -93,6 +96,7 @@ export const TransactionList = () => {
     setEditAmount(t.amount.toString());
     setEditCategory(t.category || "variable_expenses");
     setEditType(t.type);
+    setEditAccount(t.account || "checking");
   };
 
   const formatCurrency = (value: string | number) => {
@@ -154,6 +158,14 @@ export const TransactionList = () => {
                         </span>
                       </>
                     )}
+                    {transaction.account === "benefits" && (
+                      <>
+                        <span>•</span>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-medium">
+                          VA/VR
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -204,6 +216,18 @@ export const TransactionList = () => {
                             <SelectContent>
                               <SelectItem value="income">Receita</SelectItem>
                               <SelectItem value="expense">Despesa</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Conta / Origem</Label>
+                          <Select value={editAccount} onValueChange={(v: "checking" | "benefits") => setEditAccount(v)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="checking">Conta Corrente / Salário</SelectItem>
+                              <SelectItem value="benefits">Benefícios (VA/VR)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>

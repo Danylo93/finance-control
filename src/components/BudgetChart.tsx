@@ -21,11 +21,11 @@ export const BudgetChart = () => {
       const response = await axios.get('/api/transactions');
       const allTransactions: any[] = response.data;
       
-      const transactions = allTransactions.filter(t => t.type === 'expense');
+      const transactions = allTransactions.filter(t => t.type === 'expense' && t.account === 'checking');
 
       const totalExpenses = transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 1;
 
-      const validExpenses = transactions?.filter(t => t.type === "expense" && t.category !== "discounts") || [];
+      const validExpenses = transactions?.filter(t => t.category !== "discounts") || [];
 
       const categoryData = {
         fixed: validExpenses.filter(t => t.category === "fixed_expenses")

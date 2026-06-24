@@ -21,16 +21,19 @@ export const Suggestions = () => {
       const response = await axios.get('/api/transactions');
       const transactions: any[] = response.data;
 
+      // Consideramos apenas o Salário (Conta Corrente) para o orçamento de sugestões
+      const checkingTransactions = transactions?.filter(t => t.account === "checking") || [];
+
       // Vamos calcular a renda LÍQUIDA (renda - descontos) e as despesas (sem descontos)
-      const income = transactions?.filter(t => t.type === "income")
+      const income = checkingTransactions.filter(t => t.type === "income")
         .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
         
-      const discounts = transactions?.filter(t => t.type === "expense" && t.category === "discounts")
+      const discounts = checkingTransactions.filter(t => t.type === "expense" && t.category === "discounts")
         .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
         
       const netIncome = income - discounts;
 
-      const validExpenses = transactions?.filter(t => t.type === "expense" && t.category !== "discounts") || [];
+      const validExpenses = checkingTransactions.filter(t => t.type === "expense" && t.category !== "discounts") || [];
       const expenses = validExpenses.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
       const categoryData = {

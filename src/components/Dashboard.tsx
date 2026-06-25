@@ -1,8 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingDown, Wallet, PiggyBank, Utensils } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TrendingDown, Wallet, PiggyBank, Utensils, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from 'aws-amplify/auth';
 import axios from 'axios';
+import { formatCurrency, cn } from "@/lib/utils";
 
 interface BudgetData {
   checkingBalance: number;
@@ -18,7 +20,7 @@ interface DashboardProps {
 }
 
 export const Dashboard = ({ selectedMonth, selectedYear }: DashboardProps) => {
-  const { data: budgetData } = useQuery<BudgetData>({
+  const { data: budgetData, isLoading } = useQuery<BudgetData>({
     queryKey: ["budget-overview", selectedMonth, selectedYear],
     queryFn: async () => {
       const user = await getCurrentUser();
@@ -26,7 +28,7 @@ export const Dashboard = ({ selectedMonth, selectedYear }: DashboardProps) => {
 
       const response = await axios.get(`/api/transactions?userId=${user.userId}`);
       const allTransactions: any[] = response.data;
-      
+
       const monthlyTransactions = allTransactions.filter(t => {
         const d = new Date(t.date);
         return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
@@ -79,79 +81,95 @@ export const Dashboard = ({ selectedMonth, selectedYear }: DashboardProps) => {
     },
   });
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
+  const checkingBalance = budgetData?.checkingBalance ?? 0;
+
+  const metrics = [
+    {
+      title: "Saldo Conta Corrente",
+      value: checkingBalance,
+      hint: "Livre para gastos ou FIV",
+      icon: Wallet,
+      tint: "text-primary",
+      chip: "bg-primary/10",
+      valueClass: checkingBalance >= 0 ? "text-foreground" : "text-expense",
+    },
+    {
+      title: "Saldo VA/VR",
+      value: budgetData?.benefitsBalance ?? 0,
+      hint: "Exclusivo para alimentação",
+      icon: Utensils,
+      tint: "text-amber-500",
+      chip: "bg-amber-500/10",
+      valueClass: "text-foreground",
+    },
+    {
+      title: "Despesas em Dinheiro",
+      value: budgetData?.checkingExpenses ?? 0,
+      hint: "Gastos pagos da conta",
+      icon: TrendingDown,
+      tint: "text-expense",
+      chip: "bg-expense/10",
+      valueClass: "text-expense",
+    },
+    {
+      title: "Economizado (Reserva)",
+      value: budgetData?.savingsOnly ?? 0,
+      hint: "Investido no mês",
+      icon: PiggyBank,
+      tint: "text-primary",
+      chip: "bg-primary/10",
+      valueClass: "text-foreground",
+    },
+    {
+      title: "Projeto FIV",
+      value: budgetData?.fivOnly ?? 0,
+      hint: "Aportado no mês",
+      icon: Sparkles,
+      tint: "text-rose-500",
+      chip: "bg-rose-500/10",
+      valueClass: "text-foreground",
+    },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Card key={i} className="p-5">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-9 w-9 rounded-lg" />
+            </div>
+            <Skeleton className="mt-4 h-8 w-32" />
+            <Skeleton className="mt-2 h-3 w-20" />
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-      <Card className="hover:shadow-lg transition-shadow bg-primary/5">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Saldo Conta Corrente</CardTitle>
-          <Wallet className="h-4 w-4 text-primary" />
-        </CardHeader>
-        <CardContent>
-          <div className={`text-2xl font-bold ${(budgetData?.checkingBalance || 0) >= 0 ? "text-income" : "text-expense"}`}>
-            {formatCurrency(budgetData?.checkingBalance || 0)}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Livre para gastos ou FIV</p>
-        </CardContent>
-      </Card>
-
-      <Card className="hover:shadow-lg transition-shadow bg-amber-500/5 dark:bg-amber-500/10">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Saldo VA/VR</CardTitle>
-          <Utensils className="h-4 w-4 text-amber-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-amber-500">
-            {formatCurrency(budgetData?.benefitsBalance || 0)}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Exclusivo para alimentação</p>
-        </CardContent>
-      </Card>
-
-      <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Despesas em Dinheiro</CardTitle>
-          <TrendingDown className="h-4 w-4 text-expense" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-expense">
-            {formatCurrency(budgetData?.checkingExpenses || 0)}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Gastos pagos da conta</p>
-        </CardContent>
-      </Card>
-
-      <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Economizado (Reserva)</CardTitle>
-          <PiggyBank className="h-4 w-4 text-primary" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-primary">
-            {formatCurrency(budgetData?.savingsOnly || 0)}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Investido no mês</p>
-        </CardContent>
-      </Card>
-
-      <Card className="hover:shadow-lg transition-shadow bg-rose-500/5 dark:bg-rose-500/10">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Projeto FIV</CardTitle>
-          <PiggyBank className="h-4 w-4 text-rose-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-rose-500">
-            {formatCurrency(budgetData?.fivOnly || 0)}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Aportado no mês</p>
-        </CardContent>
-      </Card>
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      {metrics.map((metric) => {
+        const Icon = metric.icon;
+        return (
+          <Card
+            key={metric.title}
+            className="group relative overflow-hidden p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-sm font-medium text-muted-foreground">{metric.title}</p>
+              <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-transform group-hover:scale-110", metric.chip)}>
+                <Icon className={cn("h-5 w-5", metric.tint)} />
+              </div>
+            </div>
+            <p className={cn("mt-3 text-2xl font-bold tabular-nums tracking-tight", metric.valueClass)}>
+              {formatCurrency(metric.value)}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{metric.hint}</p>
+          </Card>
+        );
+      })}
     </div>
   );
 };

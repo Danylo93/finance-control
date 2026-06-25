@@ -1,9 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from 'aws-amplify/auth';
 import axios from 'axios';
 import { AlertCircle, CheckCircle2, SlidersHorizontal } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 interface CategoryLimit {
   name: string;
@@ -97,20 +99,28 @@ export const BudgetLimits = ({ selectedMonth, selectedYear }: BudgetLimitsProps)
     },
   });
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
-
   if (isLoading) {
     return (
       <Card className="col-span-full lg:col-span-1">
         <CardHeader>
-          <CardTitle>Limites de Orçamento</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <SlidersHorizontal className="h-5 w-5 text-primary" />
+            </span>
+            Limites de Orçamento
+          </CardTitle>
         </CardHeader>
-        <CardContent>Carregando limites...</CardContent>
+        <CardContent className="space-y-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <Skeleton className="h-2 w-full rounded-full" />
+            </div>
+          ))}
+        </CardContent>
       </Card>
     );
   }
@@ -118,8 +128,13 @@ export const BudgetLimits = ({ selectedMonth, selectedYear }: BudgetLimitsProps)
   return (
     <Card className="col-span-full lg:col-span-1">
       <CardHeader>
-        <CardTitle>Limites de Orçamento</CardTitle>
-        <p className="text-sm text-muted-foreground mt-1">
+        <CardTitle className="flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <SlidersHorizontal className="h-5 w-5 text-primary" />
+          </span>
+          Limites de Orçamento
+        </CardTitle>
+        <p className="mt-1 text-sm text-muted-foreground">
           Baseado no seu Salário Líquido ({formatCurrency(limitsData?.netIncome || 0)})
         </p>
       </CardHeader>

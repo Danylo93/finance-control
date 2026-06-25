@@ -1,104 +1,123 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Design system. All colors MUST be HSL. Tokens drive both light and dark themes. */
 
 @layer base {
   :root {
-    --background: 218 25% 97%;
-    --foreground: 220 15% 15%;
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 15%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 15%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 158 64% 52%;
+    --primary: 160 84% 36%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 13% 91%;
-    --secondary-foreground: 220 15% 15%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 33% 20%;
 
-    --muted: 220 13% 91%;
-    --muted-foreground: 220 10% 46%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 158 64% 52%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 160 70% 95%;
+    --accent-foreground: 160 84% 24%;
 
-    --success: 158 64% 52%;
+    --success: 160 84% 36%;
     --success-foreground: 0 0% 100%;
 
-    --expense: 0 84% 60%;
+    --expense: 0 72% 51%;
     --expense-foreground: 0 0% 100%;
 
-    --income: 158 64% 52%;
+    --income: 160 84% 36%;
     --income-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 88%;
-    --input: 220 13% 88%;
-    --ring: 158 64% 52%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 160 84% 36%;
 
     --radius: 0.75rem;
 
-    --chart-1: 158 64% 52%;
-    --chart-2: 210 80% 58%;
-    --chart-3: 280 65% 60%;
-    --chart-4: 42 90% 60%;
+    --chart-1: 160 84% 39%;
+    --chart-2: 210 90% 54%;
+    --chart-3: 262 70% 60%;
+    --chart-4: 38 92% 50%;
     --chart-5: 340 75% 55%;
+
+    /* Gradients & elevation */
+    --gradient-primary: linear-gradient(135deg, hsl(160 84% 39%), hsl(173 80% 40%));
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 40% 98%));
+    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
+    --shadow-md: 0 4px 12px -2px hsl(222 47% 11% / 0.08), 0 2px 4px -2px hsl(222 47% 11% / 0.04);
+    --shadow-lg: 0 12px 32px -8px hsl(222 47% 11% / 0.12), 0 4px 8px -4px hsl(222 47% 11% / 0.06);
+    --shadow-primary: 0 8px 24px -6px hsl(160 84% 36% / 0.35);
   }
 
   .dark {
-    --background: 220 20% 10%;
+    --background: 222 47% 7%;
     --foreground: 210 40% 98%;
 
-    --card: 220 18% 14%;
+    --card: 222 33% 11%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 220 18% 14%;
+    --popover: 222 33% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 158 64% 52%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 158 72% 44%;
+    --primary-foreground: 222 47% 7%;
 
-    --secondary: 220 15% 20%;
+    --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 220 15% 20%;
+    --muted: 217 33% 16%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 158 64% 52%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 217 33% 19%;
+    --accent-foreground: 158 72% 60%;
 
-    --success: 158 64% 52%;
-    --success-foreground: 0 0% 100%;
+    --success: 158 72% 44%;
+    --success-foreground: 222 47% 7%;
 
-    --expense: 0 84% 60%;
+    --expense: 0 72% 60%;
     --expense-foreground: 0 0% 100%;
 
-    --income: 158 64% 52%;
-    --income-foreground: 0 0% 100%;
+    --income: 158 72% 50%;
+    --income-foreground: 222 47% 7%;
 
-    --destructive: 0 84% 60%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 222 47% 7%;
+
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 25%;
-    --input: 220 15% 25%;
-    --ring: 158 64% 52%;
+    --border: 217 33% 20%;
+    --input: 217 33% 22%;
+    --ring: 158 72% 44%;
 
-    --chart-1: 158 64% 52%;
-    --chart-2: 210 80% 58%;
-    --chart-3: 280 65% 60%;
-    --chart-4: 42 90% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-1: 158 72% 48%;
+    --chart-2: 210 90% 62%;
+    --chart-3: 262 70% 68%;
+    --chart-4: 38 92% 58%;
+    --chart-5: 340 75% 62%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(158 72% 44%), hsl(173 70% 42%));
+    --gradient-surface: linear-gradient(180deg, hsl(222 33% 12%), hsl(222 40% 9%));
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.4), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
+    --shadow-lg: 0 12px 32px -8px hsl(0 0% 0% / 0.5), 0 4px 8px -4px hsl(0 0% 0% / 0.4);
+    --shadow-primary: 0 8px 24px -6px hsl(158 72% 44% / 0.4);
   }
 }
 
@@ -107,9 +126,59 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Currency / numeric alignment */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  /* Refined scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+    background-clip: padding-box;
   }
 }
 
+@layer components {
+  .gradient-primary {
+    background-image: var(--gradient-primary);
+  }
+
+  .text-gradient {
+    background-image: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Glassy elevated surface used for sticky header */
+  .glass {
+    background-color: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+  }
+}

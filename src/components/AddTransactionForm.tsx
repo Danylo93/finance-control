@@ -8,7 +8,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentUser } from 'aws-amplify/auth';
 import axios from 'axios';
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const AddTransactionForm = () => {
   const queryClient = useQueryClient();
@@ -35,6 +36,9 @@ export const AddTransactionForm = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["budget-overview"] });
+      queryClient.invalidateQueries({ queryKey: ["budget-chart"] });
+      queryClient.invalidateQueries({ queryKey: ["budget-limits"] });
+      queryClient.invalidateQueries({ queryKey: ["suggestions"] });
       toast.success("Transação adicionada com sucesso!");
       setDescription("");
       setAmount("");
@@ -58,23 +62,41 @@ export const AddTransactionForm = () => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Plus className="h-5 w-5" />
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <Plus className="h-5 w-5 text-primary" />
+          </span>
           Nova Transação
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="type">Tipo</Label>
-            <Select value={type} onValueChange={(value: "income" | "expense") => setType(value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="income">Receita</SelectItem>
-                <SelectItem value="expense">Despesa</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-2 rounded-lg bg-secondary/60 p-1">
+            <button
+              type="button"
+              onClick={() => setType("income")}
+              className={cn(
+                "flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all",
+                type === "income"
+                  ? "bg-success text-success-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <ArrowUpRight className="h-4 w-4" />
+              Receita
+            </button>
+            <button
+              type="button"
+              onClick={() => setType("expense")}
+              className={cn(
+                "flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all",
+                type === "expense"
+                  ? "bg-expense text-expense-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <ArrowDownRight className="h-4 w-4" />
+              Despesa
+            </button>
           </div>
 
           <div className="space-y-2">
@@ -101,19 +123,25 @@ export const AddTransactionForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Valor (R$)</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              placeholder="0,00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
+            <Label htmlFor="amount">Valor</Label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                R$
+              </span>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="pl-9 tabular-nums"
+              />
+            </div>
           </div>
 
           {type === "expense" && (
-            <div className="space-y-2">
+            <div className="space-y-2 animate-fade-in">
               <Label htmlFor="category">Categoria</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger>

@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from 'aws-amplify/auth';
 import axios from 'axios';
 import { PieChart as PieChartIcon } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 interface CategoryData {
   name: string;
@@ -30,9 +31,9 @@ export const BudgetChart = ({ selectedMonth, selectedYear }: BudgetChartProps) =
         const d = new Date(t.date);
         return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
       });
-      
+
       const transactions = allTransactions.filter(t => t.account === 'checking');
-      
+
       const grossIncome = transactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
@@ -100,65 +101,83 @@ export const BudgetChart = ({ selectedMonth, selectedYear }: BudgetChartProps) =
     },
   });
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
+  const totalExpenses = chartData?.reduce((sum, item) => sum + item.value, 0) ?? 0;
+  const isEmpty = chartData && chartData.every(item => item.value === 0);
 
   return (
     <Card className="col-span-full lg:col-span-2">
       <CardHeader>
-        <CardTitle>Distribuição por Categoria</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <PieChartIcon className="h-5 w-5 text-primary" />
+          </span>
+          Distribuição por Categoria
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        {chartData && chartData.every(item => item.value === 0) ? (
-          <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground text-center px-4">
-            <PieChartIcon className="h-16 w-16 mb-4 opacity-20" />
-            <p className="text-lg font-medium">Nenhum dado neste mês</p>
+        {isEmpty ? (
+          <div className="flex h-[300px] flex-col items-center justify-center px-4 text-center text-muted-foreground">
+            <PieChartIcon className="mb-4 h-16 w-16 opacity-20" />
+            <p className="text-lg font-medium text-foreground">Nenhum dado neste mês</p>
             <p className="text-sm">Adicione receitas ou despesas para visualizar o gráfico de orçamento.</p>
           </div>
         ) : (
           <>
-            <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={chartData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={({ name, payload }) => `${name}: ${payload.percentageText.split(' ')[0]}`}
-              outerRadius={100}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {chartData?.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="mt-6 space-y-2">
-          <p className="text-sm font-medium text-center mb-4">Padrão Recomendado: 50/20/10/10/10</p>
-          {chartData?.map((item) => (
-            <div key={item.name} className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                {item.name}
-              </span>
-                <div className="text-right flex flex-col">
-                  <span className="font-semibold text-primary">{item.percentageText}</span>
-                  <span className="text-xs text-muted-foreground mt-0.5">
-                    Recomendado: {item.recommended}%
-                  </span>
-                </div>
+            <div className="relative">
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={68}
+                    outerRadius={100}
+                    paddingAngle={2}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {chartData?.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => formatCurrency(Number(value))}
+                    contentStyle={{
+                      background: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "0.5rem",
+                      boxShadow: "var(--shadow-md)",
+                      color: "hsl(var(--popover-foreground))",
+                    }}
+                    itemStyle={{ color: "hsl(var(--popover-foreground))" }}
+                    labelStyle={{ color: "hsl(var(--popover-foreground))" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-xs text-muted-foreground">Total gasto</span>
+                <span className="text-xl font-bold tabular-nums">{formatCurrency(totalExpenses)}</span>
               </div>
-            ))}
-          </div>
-        </>
+            </div>
+
+            <div className="mt-6 space-y-2">
+              <p className="mb-3 text-center text-xs font-medium text-muted-foreground">
+                Padrão recomendado: 50 / 20 / 10 / 10 / 10
+              </p>
+              {chartData?.map((item) => (
+                <div key={item.name} className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-muted/50">
+                  <span className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                    {item.name}
+                  </span>
+                  <div className="flex flex-col text-right">
+                    <span className="font-semibold tabular-nums">{item.percentageText}</span>
+                    <span className="text-xs text-muted-foreground">Recomendado: {item.recommended}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

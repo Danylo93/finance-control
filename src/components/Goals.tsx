@@ -4,6 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentUser } from 'aws-amplify/auth';
 import axios from 'axios';
@@ -13,6 +25,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 interface Goal {
   id: string;
@@ -110,6 +123,8 @@ export const Goals = () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["budget-overview"] });
       queryClient.invalidateQueries({ queryKey: ["budget-chart"] });
+      queryClient.invalidateQueries({ queryKey: ["budget-limits"] });
+      queryClient.invalidateQueries({ queryKey: ["suggestions"] });
       toast.success("Valor adicionado com sucesso!");
       setIsAddFundsOpen(false);
       setFundsAmount("");
@@ -156,18 +171,13 @@ export const Goals = () => {
     setIsEditGoalOpen(true);
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(Number(value));
-  };
-
   return (
     <Card className="col-span-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
-          <Target className="h-5 w-5" />
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <Target className="h-5 w-5 text-primary" />
+          </span>
           Minhas Metas
         </CardTitle>
         <Dialog open={isAddGoalOpen} onOpenChange={setIsAddGoalOpen}>
@@ -201,24 +211,41 @@ export const Goals = () => {
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {isLoading ? (
-          <p className="text-center text-muted-foreground py-4">Carregando metas...</p>
+          <div className="space-y-4">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="space-y-3 rounded-xl border p-4">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-5 w-28" />
+                </div>
+                <Skeleton className="h-3 w-full rounded-full" />
+                <Skeleton className="h-4 w-40" />
+              </div>
+            ))}
+          </div>
         ) : goals?.length === 0 ? (
-          <p className="text-center text-muted-foreground py-4">Nenhuma meta cadastrada ainda.</p>
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+              <Target className="h-7 w-7 text-primary" />
+            </div>
+            <p className="font-medium">Nenhuma meta cadastrada</p>
+            <p className="text-sm text-muted-foreground">Crie uma meta e acompanhe seu progresso até alcançá-la.</p>
+          </div>
         ) : (
           goals?.map((goal) => {
             const current = Number(goal.currentAmount);
             const target = Number(goal.targetAmount);
             const percentComplete = Math.min((current / target) * 100, 100);
-            
+
             return (
-              <div 
-                key={goal.id} 
-                className={`space-y-3 p-4 border rounded-lg transition-colors ${
-                  percentComplete >= 100 
-                    ? "bg-success/5 border-success/30" 
-                    : "bg-secondary/10"
+              <div
+                key={goal.id}
+                className={`space-y-3 p-4 border rounded-xl transition-colors ${
+                  percentComplete >= 100
+                    ? "bg-success/5 border-success/30"
+                    : "bg-secondary/20 hover:border-primary/30"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -231,15 +258,34 @@ export const Goals = () => {
                     <span className={`font-semibold text-lg ${percentComplete >= 100 ? 'text-success' : ''}`}>
                       {goal.name}
                     </span>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 ml-2">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditModal(goal)}>
+                    <div className="ml-2 flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                      <Button variant="ghost" size="icon" className="h-6 w-6 hover:text-primary" onClick={() => openEditModal(goal)} aria-label="Editar meta">
                         <Pencil className="h-3 w-3" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => {
-                        if (confirm('Tem certeza que deseja excluir esta meta?')) deleteGoal.mutate(goal.id);
-                      }}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:bg-destructive/10" aria-label="Excluir meta">
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir meta?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              A meta "{goal.name}" será removida permanentemente. Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteGoal.mutate(goal.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                   <div className="text-right">

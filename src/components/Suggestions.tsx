@@ -1,9 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lightbulb, TrendingUp, AlertTriangle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from 'aws-amplify/auth';
 import axios from 'axios';
+import { cn } from "@/lib/utils";
+
+const suggestionStyles: Record<string, string> = {
+  success: "border-success/30 bg-success/5 text-success",
+  warning: "border-warning/40 bg-warning/5 text-warning",
+  info: "border-primary/30 bg-primary/5 text-primary",
+};
 
 interface Suggestion {
   type: "success" | "warning" | "info";
@@ -135,26 +141,24 @@ export const Suggestions = ({ selectedMonth, selectedYear }: SuggestionsProps) =
     <Card className="col-span-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Lightbulb className="h-5 w-5" />
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-warning/10">
+            <Lightbulb className="h-5 w-5 text-warning" />
+          </span>
           Sugestões Inteligentes
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {suggestions?.map((suggestion, index) => (
-          <Alert key={index} variant={suggestion.type === "warning" ? "destructive" : "default"}>
-            <div className="flex items-start gap-3">
-              <div className={
-                suggestion.type === "success" ? "text-income" :
-                suggestion.type === "warning" ? "text-expense" :
-                "text-primary"
-              }>
-                {suggestion.icon}
-              </div>
-              <AlertDescription className="flex-1">
-                {suggestion.message}
-              </AlertDescription>
-            </div>
-          </Alert>
+          <div
+            key={index}
+            className={cn(
+              "flex items-start gap-3 rounded-xl border p-4 text-sm",
+              suggestionStyles[suggestion.type] || suggestionStyles.info
+            )}
+          >
+            <div className="mt-0.5 shrink-0">{suggestion.icon}</div>
+            <p className="flex-1 text-foreground/90">{suggestion.message}</p>
+          </div>
         ))}
       </CardContent>
     </Card>

@@ -27,39 +27,50 @@ export const Dashboard = ({ selectedMonth, selectedYear }: DashboardProps) => {
       const response = await axios.get(`/api/transactions?userId=${user.userId}`);
       const allTransactions: any[] = response.data;
       
-      const transactions = allTransactions.filter(t => {
+      const monthlyTransactions = allTransactions.filter(t => {
         const d = new Date(t.date);
         return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
       });
 
+      const cumulativeTransactions = allTransactions.filter(t => {
+        const d = new Date(t.date);
+        return d.getFullYear() < selectedYear || (d.getFullYear() === selectedYear && d.getMonth() <= selectedMonth);
+      });
+
       // Checking Account (Salário)
-      const checkingIncome = transactions
+      // Checking Account Balance (Cumulative)
+      const checkingIncome = cumulativeTransactions
         ?.filter(t => t.type === "income" && t.account === "checking")
         .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-      const checkingExpenses = transactions
+      const cumulativeCheckingExpenses = cumulativeTransactions
         ?.filter(t => t.type === "expense" && t.account === "checking")
         .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
-      // Benefits Account (VA/VR)
-      const benefitsIncome = transactions
+      // Checking Expenses (Monthly)
+      const checkingExpenses = monthlyTransactions
+        ?.filter(t => t.type === "expense" && t.account === "checking")
+        .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+
+      // Benefits Account Balance (Cumulative)
+      const benefitsIncome = cumulativeTransactions
         ?.filter(t => t.type === "income" && t.account === "benefits")
         .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-      const benefitsExpenses = transactions
+      const benefitsExpenses = cumulativeTransactions
         ?.filter(t => t.type === "expense" && t.account === "benefits")
         .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
-      // Savings (Checking Only)
-      const savingsOnly = transactions
+      // Savings (Monthly)
+      const savingsOnly = monthlyTransactions
         ?.filter(t => t.type === "expense" && t.account === "checking" && t.category === "savings")
         .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
-      // FIV (Checking Only)
-      const fivOnly = transactions
+      // FIV (Monthly)
+      const fivOnly = monthlyTransactions
         ?.filter(t => t.type === "expense" && t.account === "checking" && t.category === "fiv")
         .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
       return {
-        checkingBalance: checkingIncome - checkingExpenses,
+        checkingBalance: checkingIncome - cumulativeCheckingExpenses,
         benefitsBalance: benefitsIncome - benefitsExpenses,
         checkingExpenses,
         savingsOnly,

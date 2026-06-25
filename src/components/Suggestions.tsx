@@ -11,15 +11,25 @@ interface Suggestion {
   icon: React.ReactNode;
 }
 
-export const Suggestions = () => {
+interface SuggestionsProps {
+  selectedMonth: number;
+  selectedYear: number;
+}
+
+export const Suggestions = ({ selectedMonth, selectedYear }: SuggestionsProps) => {
   const { data: suggestions } = useQuery<Suggestion[]>({
-    queryKey: ["suggestions"],
+    queryKey: ["suggestions", selectedMonth, selectedYear],
     queryFn: async () => {
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
       const response = await axios.get('/api/transactions');
-      const transactions: any[] = response.data;
+      const allTransactions: any[] = response.data;
+
+      const transactions = allTransactions.filter(t => {
+        const date = new Date(t.date);
+        return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear;
+      });
 
       // Consideramos apenas o Salário (Conta Corrente) para o orçamento de sugestões
       const checkingTransactions = transactions?.filter(t => t.account === "checking") || [];

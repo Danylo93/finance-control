@@ -12,15 +12,23 @@ interface CategoryData {
   percentageText: string;
 }
 
-export const BudgetChart = () => {
+interface BudgetChartProps {
+  selectedMonth: number;
+  selectedYear: number;
+}
+
+export const BudgetChart = ({ selectedMonth, selectedYear }: BudgetChartProps) => {
   const { data: chartData } = useQuery<CategoryData[]>({
-    queryKey: ["budget-chart"],
+    queryKey: ["budget-chart", selectedMonth, selectedYear],
     queryFn: async () => {
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
       const response = await axios.get('/api/transactions');
-      const allTransactions: any[] = response.data;
+      const allTransactions: any[] = response.data.filter((t: any) => {
+        const d = new Date(t.date);
+        return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+      });
       
       const transactions = allTransactions.filter(t => t.account === 'checking');
       

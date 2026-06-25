@@ -33,7 +33,12 @@ const categoryLabels: Record<string, string> = {
   discounts: "Descontos (IRPF/INSS)"
 };
 
-export const TransactionList = () => {
+interface TransactionListProps {
+  selectedMonth: number;
+  selectedYear: number;
+}
+
+export const TransactionList = ({ selectedMonth, selectedYear }: TransactionListProps) => {
   const queryClient = useQueryClient();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   
@@ -44,13 +49,18 @@ export const TransactionList = () => {
   const [editAccount, setEditAccount] = useState<"checking" | "benefits">("checking");
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
-    queryKey: ["transactions"],
+    queryKey: ["transactions", selectedMonth, selectedYear],
     queryFn: async () => {
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
       const response = await axios.get(`/api/transactions?userId=${user.userId}`);
-      return response.data;
+      const allTransactions: any[] = response.data;
+      
+      return allTransactions.filter(t => {
+        const d = new Date(t.date);
+        return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+      }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     },
   });
 

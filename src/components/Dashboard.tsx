@@ -12,15 +12,25 @@ interface BudgetData {
   fivOnly: number;
 }
 
-export const Dashboard = () => {
+interface DashboardProps {
+  selectedMonth: number;
+  selectedYear: number;
+}
+
+export const Dashboard = ({ selectedMonth, selectedYear }: DashboardProps) => {
   const { data: budgetData } = useQuery<BudgetData>({
-    queryKey: ["budget-overview"],
+    queryKey: ["budget-overview", selectedMonth, selectedYear],
     queryFn: async () => {
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
       const response = await axios.get(`/api/transactions?userId=${user.userId}`);
-      const transactions: any[] = response.data;
+      const allTransactions: any[] = response.data;
+      
+      const transactions = allTransactions.filter(t => {
+        const d = new Date(t.date);
+        return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+      });
 
       // Checking Account (Salário)
       const checkingIncome = transactions

@@ -3,7 +3,7 @@ import { getCurrentUser } from 'aws-amplify/auth';
 import axios from 'axios';
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowDownRight, ArrowUpRight, Trash2, Pencil } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Trash2, Pencil, Home, ShoppingBag, PiggyBank, Heart, Target, Receipt, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -33,6 +33,15 @@ const categoryLabels: Record<string, string> = {
   discounts: "Descontos (IRPF/INSS)"
 };
 
+const categoryIcons: Record<string, React.ReactNode> = {
+  fixed_expenses: <Home className="h-4 w-4" />,
+  variable_expenses: <ShoppingBag className="h-4 w-4" />,
+  savings: <PiggyBank className="h-4 w-4" />,
+  tithe: <Heart className="h-4 w-4" />,
+  fiv: <Target className="h-4 w-4" />,
+  discounts: <Receipt className="h-4 w-4" />
+};
+
 interface TransactionListProps {
   selectedMonth: number;
   selectedYear: number;
@@ -41,6 +50,7 @@ interface TransactionListProps {
 export const TransactionList = ({ selectedMonth, selectedYear }: TransactionListProps) => {
   const queryClient = useQueryClient();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [filterType, setFilterType] = useState<"all" | "income" | "expense" | "benefits">("all");
   
   const [editDescription, setEditDescription] = useState("");
   const [editAmount, setEditAmount] = useState("");
@@ -128,12 +138,51 @@ export const TransactionList = ({ selectedMonth, selectedYear }: TransactionList
 
   return (
     <Card className="col-span-full xl:col-span-2 shadow-sm hover:shadow-md transition-shadow">
-      <CardHeader>
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
         <CardTitle className="text-xl font-semibold">Transações Recentes</CardTitle>
+        <div className="flex bg-secondary/50 p-1 rounded-md overflow-x-auto max-w-full">
+          <Button 
+            variant={filterType === "all" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setFilterType("all")}
+            className="text-xs"
+          >
+            Todas
+          </Button>
+          <Button 
+            variant={filterType === "income" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setFilterType("income")}
+            className="text-xs text-success"
+          >
+            Receitas
+          </Button>
+          <Button 
+            variant={filterType === "expense" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setFilterType("expense")}
+            className="text-xs text-expense"
+          >
+            Despesas
+          </Button>
+          <Button 
+            variant={filterType === "benefits" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setFilterType("benefits")}
+            className="text-xs text-amber-500"
+          >
+            VA/VR
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {transactions?.map((transaction) => (
+          {transactions?.filter(t => {
+            if (filterType === "income") return t.type === "income";
+            if (filterType === "expense") return t.type === "expense";
+            if (filterType === "benefits") return t.account === "benefits";
+            return true;
+          }).map((transaction) => (
             <div
               key={transaction.id}
               className="flex items-center justify-between p-4 rounded-xl border border-border bg-card/50 hover:bg-muted/50 transition-colors group"
@@ -148,8 +197,10 @@ export const TransactionList = ({ selectedMonth, selectedYear }: TransactionList
                 >
                   {transaction.type === "income" ? (
                     <ArrowUpRight className="h-5 w-5" />
+                  ) : transaction.category && categoryIcons[transaction.category] ? (
+                    categoryIcons[transaction.category]
                   ) : (
-                    <ArrowDownRight className="h-5 w-5" />
+                    <CreditCard className="h-5 w-5" />
                   )}
                 </div>
                 <div>

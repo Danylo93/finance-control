@@ -3,7 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from 'aws-amplify/auth';
 import axios from 'axios';
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, SlidersHorizontal } from "lucide-react";
 
 interface CategoryLimit {
   name: string;
@@ -124,8 +124,16 @@ export const BudgetLimits = ({ selectedMonth, selectedYear }: BudgetLimitsProps)
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
-        {limitsData?.limits.map((item) => {
-          const percentUsed = Math.min((item.spent / item.limit) * 100, 100) || 0;
+        {limitsData && limitsData.grossIncome === 0 && limitsData.limits.every(item => item.spent === 0) ? (
+          <div className="flex flex-col items-center justify-center py-10 text-muted-foreground text-center">
+            <SlidersHorizontal className="h-16 w-16 mb-4 opacity-20" />
+            <p className="text-lg font-medium">Nenhum limite calculado</p>
+            <p className="text-sm">Os limites aparecerão quando houver renda ou gastos no mês.</p>
+          </div>
+        ) : (
+          <>
+            {limitsData?.limits.map((item) => {
+              const percentUsed = Math.min((item.spent / item.limit) * 100, 100) || 0;
           
           if (item.type === 'ceiling') {
             const isOverLimit = item.spent > item.limit;
@@ -211,6 +219,8 @@ export const BudgetLimits = ({ selectedMonth, selectedYear }: BudgetLimitsProps)
             );
           }
         })}
+        </>
+        )}
       </CardContent>
     </Card>
   );

@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { CheckCircle2 } from "lucide-react";
 
 interface Goal {
   id: string;
@@ -212,11 +213,24 @@ export const Goals = () => {
             const percentComplete = Math.min((current / target) * 100, 100);
             
             return (
-              <div key={goal.id} className="space-y-3 p-4 border rounded-lg bg-secondary/10">
+              <div 
+                key={goal.id} 
+                className={`space-y-3 p-4 border rounded-lg transition-colors ${
+                  percentComplete >= 100 
+                    ? "bg-success/5 border-success/30" 
+                    : "bg-secondary/10"
+                }`}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 group">
-                    <TrendingUp className="h-4 w-4 text-primary" />
-                    <span className="font-semibold text-lg">{goal.name}</span>
+                    {percentComplete >= 100 ? (
+                      <CheckCircle2 className="h-5 w-5 text-success animate-in zoom-in duration-300" />
+                    ) : (
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                    )}
+                    <span className={`font-semibold text-lg ${percentComplete >= 100 ? 'text-success' : ''}`}>
+                      {goal.name}
+                    </span>
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 ml-2">
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditModal(goal)}>
                         <Pencil className="h-3 w-3" />
@@ -238,10 +252,16 @@ export const Goals = () => {
                   </div>
                 </div>
                 
-                <Progress value={percentComplete} className="h-3 w-full bg-secondary" />
+                <Progress 
+                  value={percentComplete} 
+                  className={`h-3 w-full ${percentComplete >= 100 ? 'bg-success/20' : 'bg-secondary'}`} 
+                  indicatorColor={percentComplete >= 100 ? 'hsl(var(--success))' : undefined}
+                />
                 
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">{percentComplete.toFixed(1)}% alcançado</span>
+                  <span className={`font-medium ${percentComplete >= 100 ? 'text-success' : ''}`}>
+                    {percentComplete >= 100 ? "Meta Alcançada! 🎉" : `${percentComplete.toFixed(1)}% alcançado`}
+                  </span>
                   <div className="flex items-center gap-4">
                     {goal.deadline && (
                       <span className="text-muted-foreground">

@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recha
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from 'aws-amplify/auth';
 import axios from 'axios';
+import { PieChart as PieChartIcon } from "lucide-react";
 
 interface CategoryData {
   name: string;
@@ -112,7 +113,15 @@ export const BudgetChart = ({ selectedMonth, selectedYear }: BudgetChartProps) =
         <CardTitle>Distribuição por Categoria</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        {chartData && chartData.every(item => item.value === 0) ? (
+          <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground text-center px-4">
+            <PieChartIcon className="h-16 w-16 mb-4 opacity-20" />
+            <p className="text-lg font-medium">Nenhum dado neste mês</p>
+            <p className="text-sm">Adicione receitas ou despesas para visualizar o gráfico de orçamento.</p>
+          </div>
+        ) : (
+          <>
+            <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
               data={chartData}
@@ -140,15 +149,17 @@ export const BudgetChart = ({ selectedMonth, selectedYear }: BudgetChartProps) =
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
                 {item.name}
               </span>
-              <div className="text-right flex flex-col">
-                <span className="font-semibold text-primary">{item.percentageText}</span>
-                <span className="text-xs text-muted-foreground mt-0.5">
-                  Recomendado: {item.recommended}%
-                </span>
+                <div className="text-right flex flex-col">
+                  <span className="font-semibold text-primary">{item.percentageText}</span>
+                  <span className="text-xs text-muted-foreground mt-0.5">
+                    Recomendado: {item.recommended}%
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
+        )}
       </CardContent>
     </Card>
   );
